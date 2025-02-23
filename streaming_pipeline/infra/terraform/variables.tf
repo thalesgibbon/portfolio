@@ -4,7 +4,11 @@ variable "project_id" {
 }
 
 variable "region" {
-  description = "Region para implantar o serviço Cloud Run"
+  description = "Region"
   type        = string
-  default     = "us-central1"
+}
+
+variable "bucket_name" {
+  description = "Bucket name"
+  type        = string
 }
