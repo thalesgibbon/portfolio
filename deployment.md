@@ -68,7 +68,7 @@ These commands deploy only the API module of the infrastructure. The `-target=mo
 
 ```sh
 terraform plan
-terraform apply -auto-approve
+terraform apply
 ```
 This deploys the entire infrastructure, including APIs, Cloud Run, Data Lakes, and any other defined modules. The `-auto-approve` flag prevents manual confirmation prompts.
 
