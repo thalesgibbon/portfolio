@@ -3,3 +3,5 @@
 /streaming_pipeline/infra/terraform/.terraform.lock.hcl
 /.idea/
 /streaming_pipeline/infra/terraform/terraform.tfstate
+test
+/streaming_pipeline/infra/terraform/terraform.tfstate.backup
