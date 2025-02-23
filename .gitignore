@@ -1,0 +1,5 @@
+/.venv/
+/streaming_pipeline/infra/terraform/.terraform/
+/streaming_pipeline/infra/terraform/.terraform.lock.hcl
+/.idea/
+/streaming_pipeline/infra/terraform/terraform.tfstate
