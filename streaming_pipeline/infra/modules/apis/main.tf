@@ -6,6 +6,7 @@ resource "google_project_service" "required_apis" {
     "storage.googleapis.com",
     "bigquery.googleapis.com",
     "pubsub.googleapis.com",
+    "dataflow.googleapis.com",
   ])
 
   project = var.project_id
