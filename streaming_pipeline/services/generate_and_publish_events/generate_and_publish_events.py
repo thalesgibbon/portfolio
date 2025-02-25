@@ -107,9 +107,9 @@ async def generate_and_publish_events(event_type: str, messages_per_second: int,
 if __name__ == '__main__':
     from config import project_id, topic_name
 
-    event_type = "order"  # "order", "inventory" or "user_activity"
-    messages_per_second = 2
-    duration_seconds = 2
+    event_type = "user_activity"  # "order", "inventory" or "user_activity"
+    messages_per_second = 1
+    duration_seconds = 1
 
     publisher = PubSubPublisher(topic_name=topic_name, project_id=project_id)
 

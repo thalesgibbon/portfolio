@@ -1,15 +1,63 @@
 import apache_beam as beam
 from apache_beam.options.pipeline_options import PipelineOptions, StandardOptions, GoogleCloudOptions, SetupOptions
+from apache_beam.io.gcp.bigquery import WriteToBigQuery, BigQueryDisposition
 import argparse
 import json
+import ast
+
+
+class PrintElement(beam.DoFn):
+    def __init__(self, etc=None):
+        self.etc = etc
+
+    def process(self, element):
+        print(f"{f'{self.etc}, ' if self.etc else ''}Received message: {element}")
+        yield element
 
 
 class WriteToGCSDoFn(beam.DoFn):
     def process(self, element):
-        filename, data = element
+        filename = element['gcs_path']
+        data = json.dumps(element['data'])
         with beam.io.gcsio.GcsIO().open(filename, 'w') as f:
             f.write(data.encode('utf-8'))
-        yield filename
+        yield element
+
+
+class TransformData(beam.DoFn):
+    def __init__(self, bucket):
+        self.bucket = bucket
+
+    def process(self, element):
+        table = element.attributes['type']
+        gcs_path = self._file_path_prefix(table, self.bucket)
+        new_element = {
+            'table': table,
+            'data': ast.literal_eval(element.data.decode('utf-8')),
+            'gcs_path': gcs_path
+        }
+        yield new_element
+
+    def _file_path_prefix(self, table, bucket) -> str:
+        from datetime import datetime
+        event_datetime = datetime.now()
+        event_type = 'unknown' if table is None else table
+        timestamp = event_datetime.strftime('%Y/%m/%d/%H/%M')
+        file_name = event_datetime.strftime('%Y%m%d%H%M%S%f')[:-3]
+        gcs_path = f'gs://{bucket}/output/{event_type}/{timestamp}/{event_type}_{file_name}.json'
+        return gcs_path
+
+
+class CustomWriteToBigQuery(WriteToBigQuery):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def expand(self, pcoll):
+        # Realiza a customização antes de chamar o expand original do WriteToBigQuery
+        customized_pcoll = pcoll | 'Extract Data' >> beam.Map(lambda element: element['data'])
+
+        # Chama o expand original para escrever no BigQuery
+        return super().expand(customized_pcoll)
 
 
 class PubSubToGCSPipeline:
@@ -58,29 +106,30 @@ class PubSubToGCSPipeline:
 
     def run(self) -> None:
         subscription_path = f'projects/{self.project_id}/subscriptions/{self.input_subscription}'
+        tables = ['order', 'inventory', 'user_activity']
 
         with beam.Pipeline(options=self.pipeline_options) as p:
-            (
+            transformed_data  = (
                 p
                 | 'ReadFromPubSub' >> beam.io.ReadFromPubSub(subscription=subscription_path, with_attributes=True)
-                | 'DecodeMessage' >> beam.Map(lambda msg: self.decode_element(msg))
-                | 'PrintMessage1' >> beam.Map(lambda msg: self.print_element(msg))
-                | 'FormatToJson' >> beam.Map(lambda msg: (self.file_path_prefix(msg['table']), json.dumps(msg['data'])))
+                | 'Transform Data' >> beam.ParDo(TransformData(self.bucket))
+                | 'Print Element' >> beam.ParDo(PrintElement())
                 | 'Write to GCS' >> beam.ParDo(WriteToGCSDoFn())
             )
 
-    @staticmethod
-    def print_element(element):
-        print(f"Received message: {element}")
-        return element
-
-    @staticmethod
-    def decode_element(element):
-        new_element = {
-            'table': element.attributes['type'],
-            'data': element.data.decode('utf-8')
-        }
-        return new_element
+            # todo workaround to select table_name from message and send to WriteToBigQuery
+            for table_name in tables:
+                (
+                    transformed_data
+                    | f'Filter for {table_name}' >> beam.Filter(lambda element, table=table_name: element['table'] == table)
+                    | f'Write to BigQuery {table_name}' >> CustomWriteToBigQuery(
+                        table=table_name,
+                        dataset='raw_events',
+                        project=self.project_id,
+                        write_disposition=BigQueryDisposition.WRITE_APPEND,
+                        create_disposition=BigQueryDisposition.CREATE_IF_NEEDED
+                    )
+                )
 
 
 if __name__ == '__main__':

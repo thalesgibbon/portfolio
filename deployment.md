@@ -72,6 +72,13 @@ terraform apply
 ```
 This deploys the entire infrastructure, including APIs, Cloud Run, Data Lakes, and any other defined modules. The `-auto-approve` flag prevents manual confirmation prompts.
 
+### 9 Deploy Dataflow
+
+```sh
+python portfolio\streaming_pipeline\infra\modules\dataflow\dataflow_pubsub_to_gcs.py --runner=DataflowRunner
+```
+This command deploys the Dataflow job to process the streaming data from Pub/Sub and write it to GCS.
+
 ## ✅ Summary
 By following these steps, you will:
 - Create a GCP project and link it to a billing account.

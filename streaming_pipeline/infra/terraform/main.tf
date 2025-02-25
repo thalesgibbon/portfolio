@@ -18,3 +18,8 @@ module "storage" {
   bucket_name = var.bucket_name
   region = var.region
 }
+
+module "bigquery" {
+  source = "../modules/bigquery"
+  region = var.region
+}
