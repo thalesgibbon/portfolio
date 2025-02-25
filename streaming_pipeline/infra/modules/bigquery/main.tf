@@ -31,7 +31,7 @@ resource "google_bigquery_table" "order" {
     field = "order_date"
   }
 
-  clustering = ["status", "customer_id", "order_id"]
+  clustering = ["status", "customer_id"]
 
   deletion_protection = false
 }
@@ -54,7 +54,7 @@ resource "google_bigquery_table" "inventory" {
     field = "timestamp"
   }
 
-  clustering = ["product_id", "warehouse_id", "event_type"]
+  clustering = ["product_id", "warehouse_id"]
 
   deletion_protection = false
 }
@@ -80,7 +80,7 @@ resource "google_bigquery_table" "user_activity" {
     field = "timestamp"
   }
 
-  clustering = ["activity_type", "user_id", "event_type"]
+  clustering = ["activity_type", "user_id"]
 
   deletion_protection = false
 }
