@@ -30,11 +30,18 @@ This approach allows for the use of BigQuery queries to transform data from the 
 ### Data Model
 - Data Model Diagram: The data model is designed to support efficient querying and analytics.
   
-![](./img_data_model.png)
+![](./img_er_raw.png)
 
-- DDL Statements: The DDL scripts for creating the BigQuery tables are located in the following path: [infra/modules/bigquery/main.tf](../infra/modules/bigquery/main.tf)
+The event-driven architecture generates denormalized tables, storing data directly within events, such as order items within the orders table instead of separating them into a dedicated order_items table.
 
-- Partitioning and Clustering Strategies:
+Since I'm using Google BigQuery, which handles denormalized data and nested fields efficiently, I've chosen to maintain this structure for now. This approach provides flexibility for querying complex datasets while allowing for potential normalization later, once business requirements are clearer.
+
+In some cases, companies prefer a more traditional data modeling approach, adopting a Star Schema or Snowflake Schema, which can enhance data consistency and support complex analytical queries.
+
+### DDL Statements
+The DDL scripts for creating the BigQuery tables are located in the following path: [infra/modules/bigquery/main.tf](../infra/modules/bigquery/main.tf)
+
+### Partitioning and Clustering Strategies:
 
 
   I decided to partition the tables by their main date columns: `order.order_date`, `inventory.timestamp`, and `user_activity.timestamp`.

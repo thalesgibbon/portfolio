@@ -1,0 +1,44 @@
+// Tabela de Pedidos (Order Events)
+Table orders {
+  event_type varchar [note: 'Tipo de evento (order)']
+  order_id uuid [primary key, note: 'ID do pedido']
+  customer_id uuid [note: 'ID do cliente']
+  order_date timestamp [note: 'Data do pedido']
+  status enum('pending', 'processing', 'shipped', 'delivered') [note: 'Status do pedido']
+  items__product_id uuid [note: 'ID do produto']
+  items__product_name varchar [note: 'Nome do produto']
+  items__quantity integer [note: 'Quantidade do produto']
+  items__price float [note: 'Preço unitário']
+
+  shipping_address__street varchar [note: 'Rua do endereço de entrega']
+  shipping_address__city varchar [note: 'Cidade do endereço de entrega']
+  shipping_address__country varchar [note: 'País do endereço de entrega']
+  total_amount float [note: 'Valor total do pedido']
+}
+
+// Tabela de Inventário (Inventory Events)
+Table inventory {
+  event_type varchar [note: 'Tipo de evento (inventory)']
+  inventory_id uuid [primary key, note: 'ID do evento de inventário']
+  product_id uuid [note: 'ID do produto']
+  warehouse_id uuid [note: 'ID do armazém']
+  quantity_change integer [note: 'Mudança na quantidade (-100 a 100)']
+  reason enum('restock', 'sale', 'return', 'damage') [note: 'Motivo da alteração']
+  timestamp timestamp [note: 'Data e hora do evento de inventário']
+}
+
+// Tabela de Atividade do Usuário (User Activity Events)
+Table user_activity {
+  event_type varchar [note: 'Tipo de evento (user_activity)']
+  user_id uuid [primary key, note: 'ID do usuário']
+  activity_type enum('login', 'logout', 'view_product', 'add_to_cart', 'remove_from_cart') [note: 'Tipo de atividade']
+  ip_address varchar [note: 'Endereço IP do usuário']
+  user_agent varchar [note: 'Informações do navegador']
+  timestamp timestamp [note: 'Data e hora da atividade']
+  metadata__session_id uuid [note: 'ID da sessão do usuário']
+  metadata__platform enum('web', 'mobile', 'tablet') [note: 'Plataforma utilizada']
+}
+
+// Relacionamentos
+Ref: orders.items__product_id - inventory.product_id
+Ref: orders.customer_id - user_activity.user_id
