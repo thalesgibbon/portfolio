@@ -48,18 +48,6 @@ class TransformData(beam.DoFn):
         return gcs_path
 
 
-class CustomWriteToBigQuery(WriteToBigQuery):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    def expand(self, pcoll):
-        # Realiza a customização antes de chamar o expand original do WriteToBigQuery
-        customized_pcoll = pcoll | 'Extract Data' >> beam.Map(lambda element: element['data'])
-
-        # Chama o expand original para escrever no BigQuery
-        return super().expand(customized_pcoll)
-
-
 class PubSubToGCSPipeline:
     def __init__(self, runner: str, project_id: str, input_subscription: str, bucket: str, file_name_prefix: str = 'messages'):
         self.runner = runner
@@ -122,7 +110,8 @@ class PubSubToGCSPipeline:
                 (
                     transformed_data
                     | f'Filter for {table_name}' >> beam.Filter(lambda element, table=table_name: element['table'] == table)
-                    | f'Write to BigQuery {table_name}' >> CustomWriteToBigQuery(
+                    | f'Extract Data {table_name}' >> beam.Map(lambda element: element['data'])
+                    | f'Write to BigQuery {table_name}' >> WriteToBigQuery(
                         table=table_name,
                         dataset='raw_events',
                         project=self.project_id,
