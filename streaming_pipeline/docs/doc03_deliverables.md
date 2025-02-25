@@ -131,5 +131,16 @@ This robust setup ensures that data is seamlessly captured, transformed, and mad
 ---
 
 
+## Next steps
+
+
+Set up unit and integration tests in a development environment and automate the deployment pipeline, I will create unit and integration tests using a testing framework like Pytest or JUnit.
+I’ll run these tests locally to ensure everything works correctly.
+Then, I’ll integrate the tests into a CI/CD pipeline (e.g., GitHub Actions or Jenkins) to automate test execution with every code push.
+Finally, I’ll configure the pipeline to automatically handle the build, test, and deployment processes to the target environment
+
+
+---
+
 ## Contact
 📧 thalesgibbon@example.com
